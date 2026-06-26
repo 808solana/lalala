@@ -234,3 +234,18 @@ As you work, update docs immediately — don't wait for wrap-up:
 - **AGENT_MEMORY.md** — user preferences, env facts, lessons learned
 
 Ask yourself: *"What would confuse a future agent about this?"* If anything — write it down now.
+
+---
+
+## Cursor Cloud specific instructions
+
+Durable, non-obvious notes for Cloud Agents. Standard commands live in `README.md` (Setup / Development Commands); don't duplicate them here.
+
+- **The application only exists on the `Brain` branch.** The `main` branch holds only `BRAND_ASSETS/` and design-skill docs — no `package.json`, no app. Do environment setup and app work from a branch based on `Brain`. The startup update script guards on `package.json` existing, so it safely no-ops when a session starts on `main`.
+- **Node 22 works** with Next.js 16 (Turbopack). Dependencies install via `npm install` (uses `package-lock.json`).
+- **`OPENROUTER_API_KEY` (server-side env var) is required for the AI features.** Without it, `POST /api/chat`, `/api/fusion`, and `/api/agent` return `401`. Set it in `.env.local` (or as an environment secret) and **fully restart `npm run dev`** afterward — env changes are not hot-reloaded.
+- **`GET /api/models` and `GET /api/health` work WITHOUT a key.** `/api/models` fetches OpenRouter's public model list (~340 models), so the model picker populates even with no key — but actual answers won't generate until a key is set.
+- **No `.env.example` is committed** (`.gitignore` ignores `.env*`). Create `.env.local` yourself.
+- **BYOK is not wired into the `/api/chat` route** (it uses the server key only), so to test chat you must set `OPENROUTER_API_KEY` server-side, not via the in-app BYOK field.
+- **`from-thinking-to-coding/` is a git submodule** pointing to a commit not in this remote, so it stays empty. Run with `git config submodule.recurse false` to avoid checkout errors; it is not needed to run the app.
+- Run the dev server under `tmux` so it survives across tool calls; it listens on `http://localhost:3000`.

@@ -7,13 +7,48 @@ import { useChatStore } from "@/store/chat";
 
 interface ChatAreaProps {
   messages: Message[];
+  scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-export function ChatArea({ messages }: ChatAreaProps) {
+export function ChatArea({ messages, scrollContainerRef }: ChatAreaProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const isPinnedRef = useRef(true);
+  const prevMessageCountRef = useRef(messages.length);
+
+  // Track whether the user is pinned to the bottom of the scroll container.
+  // If they've scrolled up to read, we stop auto-scrolling until they
+  // scroll back down or a new message is added.
+  useEffect(() => {
+    const container = scrollContainerRef?.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+      isPinnedRef.current = distanceFromBottom < 80;
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [scrollContainerRef]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const messageCountChanged =
+      messages.length !== prevMessageCountRef.current;
+    prevMessageCountRef.current = messages.length;
+
+    // New message added (user submitted) → force scroll to bottom
+    if (messageCountChanged) {
+      isPinnedRef.current = true;
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+
+    // Streaming chunk → only scroll if the user is still pinned to the bottom.
+    // Instant (non-smooth) scroll avoids laggy animation on every token.
+    if (isPinnedRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "auto" });
+    }
   }, [messages]);
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { QueryBar } from "@/components/QueryBar";
 import { ChatArea } from "@/components/ChatArea";
@@ -12,6 +12,8 @@ import { streamAgent } from "@/lib/streamAgent";
 import type { OpenRouterMessage } from "@/types/chat";
 
 export default function Home() {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   const {
     messages,
     addMessage,
@@ -153,8 +155,8 @@ export default function Home() {
           </main>
         ) : (
           <>
-            <div className="flex-1 overflow-y-auto pt-6">
-              <ChatArea messages={messages} />
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pt-6">
+              <ChatArea messages={messages} scrollContainerRef={scrollContainerRef} />
             </div>
             <div className="border-t border-[#e8e4df] px-4 py-4 flex justify-center bg-white">
               <QueryBar onSubmit={handleSubmit} />
